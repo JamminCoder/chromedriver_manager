@@ -3,6 +3,8 @@ import os
 import urllib.request
 import zipfile
 import json
+from bs4 import BeautifulSoup
+import requests
 
 def read(path):
     with open(path, 'r') as f:
@@ -26,24 +28,27 @@ def is_windows():
     return 'nt' == os.name
 
 def get_chrome_version():
-    windows_check_cmd = 'wmic datafile where name="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" get Version /value'.split(' ')
-    posix_check_cmd = 'google-chrome --version'.split(' ')
+    chrome_path_win = r'"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"'
+    windows_check_cmd = ['wmic', 'datafile', 'where', f'name={chrome_path_win}', 'get', 'Version', '/value']
+    posix_check_cmd = ['google-chrome', '--version']
 
     if is_unix():
         # Get chrome version on linux
         output = subprocess.check_output(posix_check_cmd).decode().strip()
-        return output.split(' ')[-1].strip()
+        return output.split(' ')[-1]
 
     if is_windows():
         # Get chrome version on windows
-        output = subprocess.check_output(windows_check_cmd).strip()
-        return output.split('=')[-1].strip()
+        output = subprocess.check_output(windows_check_cmd).decode().strip()
+        return output.split('=')[-1]
 
 
     # Line is reached is OS is not supported
     print('Unsupported operating system')
     exit()
 
+def get_major_chrome_version():
+    return get_chrome_version().split('.')[0]
 
 def get_platform_folder():
     if is_windows():
@@ -75,6 +80,21 @@ def download(url, out):
         exit()
 
     print('Done.')
+
+
+def get_download_version():
+    major_version = get_major_chrome_version()
+    download_page_url = 'https://sites.google.com/chromium.org/driver/'
+    link_selector = f'*[href*="index.html?path={major_version}"]'
+
+    page_content = requests.get(download_page_url).content
+    soup = BeautifulSoup(page_content, 'html.parser')
+    anchor = soup.select(link_selector)[0]
+    href = anchor['href']
+    download_version = href.split('=')[1][0:-1]
+    return download_version
+
+
 
 
 def extract(zip_file, output_dir):
@@ -118,15 +138,17 @@ def chrome_driver_should_update():
         print('No chrome driver found!')
         return True
     
+    print('Chrome driver OK')
     return False
 
 
 
 def update_chrome_driver():
     chrome_version = get_chrome_version()
+    download_version = get_download_version()
     platform_folder = get_platform_folder()
     download_path = platform_folder.replace('.zip', f'-{chrome_version}.zip')
-    download_url = f'https://chromedriver.storage.googleapis.com/{chrome_version}/{platform_folder}'
+    download_url = f'https://chromedriver.storage.googleapis.com/{download_version}/{platform_folder}'
     exec_output_dir = get_output_path()
     if not os.path.exists(exec_output_dir):
         os.mkdir(exec_output_dir)
