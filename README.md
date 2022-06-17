@@ -1,7 +1,8 @@
-# chrome-driver-updater
-Script to detect the current installed Google Chrome version and download its corresponding driver.
+# Chrome Driver Manager
+Script to detect the current installed Google Chrome version and download its corresponding driver.  
+Usefull for keeping the driver up-to-date in a project that uses the Selenium framework with Google Chrome.  
 
-You need `requests` and `beautifulsoup4` installed to use this program:
+You need Python 3.7+, `requests` and `beautifulsoup4` installed to use this program:
 
 ```
 pip install requests
