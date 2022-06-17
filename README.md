@@ -1,2 +1,2 @@
 # chrome-driver-updater
-Scrip to detect the current installed chrome version and download it's corresponding driver
+Script to detect the current installed Google Chrome version and download it's corresponding driver.
