@@ -32,12 +32,12 @@ def get_chrome_version():
     if is_unix():
         # Get chrome version on linux
         output = subprocess.check_output(posix_check_cmd).decode().strip()
-        return output.split(' ')[-1]
+        return output.split(' ')[-1].strip()
 
     if is_windows():
         # Get chrome version on windows
         output = subprocess.check_output(windows_check_cmd).strip()
-        return output.split('=')[-1]
+        return output.split('=')[-1].strip()
 
 
     # Line is reached is OS is not supported
@@ -56,10 +56,10 @@ def get_platform_folder():
 def get_output_path():
     username = os.environ.get('USERNAME')
     if is_unix():
-        path = f'/home/{username}/chromedriver_linux64'
+        path = f'/home/{username}/chromedriver_linux64/'
         
     if is_windows():
-        path = f'C:\\Users\\{username}\\chromedriver_win32'
+        path = f'C:\\Users\\{username}\\chromedriver_win32\\'
 
     return path
 
@@ -67,7 +67,13 @@ def get_output_path():
 def download(url, out):
     print(f'Downloading {url}')
     print(f'Outputing to {out}')
-    urllib.request.urlretrieve(url, out)
+    try:
+        urllib.request.urlretrieve(url, out)
+    except Exception as e:
+        print(e)
+        print(f'[-] Error! Something went wrong while downloading from {url}')
+        exit()
+
     print('Done.')
 
 
@@ -93,23 +99,23 @@ def get_driver_exec_path():
 
 
 def driver_matches_chrome():
-    if not os.path.exists('.driver_version'):
+    if not os.path.exists('driver_version.txt'):
         return False
 
-    driver_version = read('.driver_version').strip()
+    driver_version = read('driver_version.txt').strip()
     return driver_version == get_chrome_version()
 
 
 
 
 def chrome_driver_should_update():
-    print('Checking to see if chrome driver should update!')
+    print('Checking to see if chrome driver should update...')
     if not driver_matches_chrome():
-        print('Chrome driver out of date!!!')
+        print('Can\'t tell if Chrome driver matches Chrome version.')
         return True
     
     if not get_driver_exec_path():
-        print('No chrome driver found!!!')
+        print('No chrome driver found!')
         return True
     
     return False
@@ -129,6 +135,11 @@ def update_chrome_driver():
     extract(download_path, exec_output_dir)
 
     os.remove(download_path)
+
+    write('driver_version.txt', chrome_version)
+
+    print('Succesfully updated Chrome driver.')
+    print(f'Driver stored in {get_driver_exec_path()}')
 
 
 if __name__ == '__main__':
