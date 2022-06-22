@@ -52,10 +52,10 @@ def get_major_chrome_version():
 
 def get_platform_folder():
     if is_windows():
-        return 'chromedriver_win32.zip'
+        return 'chromedriver_win32'
     
     if is_unix():
-        return 'chromedriver_linux64.zip'
+        return 'chromedriver_linux64'
 
 
 def get_output_path():
@@ -147,8 +147,8 @@ def update_chrome_driver():
     chrome_version = get_chrome_version()
     download_version = get_download_version()
     platform_folder = get_platform_folder()
-    download_path = platform_folder.replace('.zip', f'-{chrome_version}.zip')
-    download_url = f'https://chromedriver.storage.googleapis.com/{download_version}/{platform_folder}'
+    download_path = f'{platform_folder}-{download_version}.zip'
+    download_url = f'https://chromedriver.storage.googleapis.com/{download_version}/{platform_folder}.zip'
     exec_output_dir = get_output_path()
     if not os.path.exists(exec_output_dir):
         os.mkdir(exec_output_dir)
