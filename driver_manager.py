@@ -122,11 +122,14 @@ def get_driver_exec_path():
     return None
 
 
+
 def driver_matches_chrome():
-    if not os.path.exists('driver_version.txt'):
+    version_file = get_output_path() + 'driver_version.txt'
+    
+    if not os.path.exists(version_file):
         return False
 
-    driver_version = read('driver_version.txt').strip()
+    driver_version = read(version_file).strip()
     return driver_version == get_chrome_version()
 
 
@@ -162,7 +165,8 @@ def update_chrome_driver():
 
     os.remove(download_path)
 
-    write('driver_version.txt', chrome_version)
+    version_file = get_output_path() + 'driver_version.txt'
+    write(version_file, chrome_version)
 
     print('Succesfully updated Chrome driver.')
     print(f'Driver stored in {get_driver_exec_path()}')
