@@ -60,11 +60,13 @@ def get_platform_folder():
 
 def get_output_path():
     username = os.environ.get('USERNAME')
+    platform_folder = get_platform_folder()
+
     if is_unix():
-        path = f'/home/{username}/chromedriver_linux64/'
+        path = f'/home/{username}/{platform_folder}/'
         
     if is_windows():
-        path = f'C:\\Users\\{username}\\chromedriver_win32\\'
+        path = f'C:\\Users\\{username}\\{platform_folder}\\'
 
     return path
 
@@ -91,7 +93,9 @@ def get_download_version():
     soup = BeautifulSoup(page_content, 'html.parser')
     anchor = soup.select(link_selector)[0]
     href = anchor['href']
-    download_version = href.split('=')[1][0:-1]
+
+    # href is something like `index.html?path=102.x.x.x/`. 
+    download_version = href.split('=')[1].replace('/', '')
     return download_version
 
 
