@@ -52,21 +52,19 @@ def get_major_chrome_version():
 
 def get_platform_folder():
     if is_windows():
-        return 'chromedriver_win32'
+        return 'chromedriver_win32.zip'
     
     if is_unix():
-        return 'chromedriver_linux64'
+        return 'chromedriver_linux64.zip'
 
 
 def get_output_path():
     username = os.environ.get('USERNAME')
-    platform_folder = get_platform_folder()
-
     if is_unix():
-        path = f'/home/{username}/{platform_folder}/'
+        path = f'/home/{username}/chromedriver_linux64/'
         
     if is_windows():
-        path = f'C:\\Users\\{username}\\{platform_folder}\\'
+        path = f'C:\\Users\\{username}\\chromedriver_win32\\'
 
     return path
 
@@ -93,9 +91,7 @@ def get_download_version():
     soup = BeautifulSoup(page_content, 'html.parser')
     anchor = soup.select(link_selector)[0]
     href = anchor['href']
-
-    # href is something like `index.html?path=102.x.x.x/`. 
-    download_version = href.split('=')[1].replace('/', '')
+    download_version = href.split('=')[1][0:-1]
     return download_version
 
 
@@ -121,15 +117,16 @@ def get_driver_exec_path():
 
     return None
 
-
+def make_driver_executable(driver_path):
+    if is_unix():
+        subprocess.call(['chmod', '+x', driver_path])
 
 def driver_matches_chrome():
-    version_file = get_output_path() + 'driver_version.txt'
-    
-    if not os.path.exists(version_file):
+    version_path = get_output_path() + 'driver_version.txt'
+    if not os.path.exists(version_path):
         return False
 
-    driver_version = read(version_file).strip()
+    driver_version = read(version_path).strip()
     return driver_version == get_chrome_version()
 
 
@@ -154,8 +151,8 @@ def update_chrome_driver():
     chrome_version = get_chrome_version()
     download_version = get_download_version()
     platform_folder = get_platform_folder()
-    download_path = f'{platform_folder}-{download_version}.zip'
-    download_url = f'https://chromedriver.storage.googleapis.com/{download_version}/{platform_folder}.zip'
+    download_path = platform_folder.replace('.zip', f'-{chrome_version}.zip')
+    download_url = f'https://chromedriver.storage.googleapis.com/{download_version}/{platform_folder}'
     exec_output_dir = get_output_path()
     if not os.path.exists(exec_output_dir):
         os.mkdir(exec_output_dir)
@@ -165,11 +162,12 @@ def update_chrome_driver():
 
     os.remove(download_path)
 
-    version_file = get_output_path() + 'driver_version.txt'
-    write(version_file, chrome_version)
+    write(f'{exec_output_dir}driver_version.txt', chrome_version)
 
+    executable_path = get_driver_exec_path()
     print('Succesfully updated Chrome driver.')
-    print(f'Driver stored in {get_driver_exec_path()}')
+    print(f'Driver stored in {executable_path}')
+    make_driver_executable(executable_path)
 
 
 if __name__ == '__main__':
